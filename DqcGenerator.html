@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<script src="vue.js" type="text/javascript" charset="utf-8"></script>
+<style type="text/css">
+	
+</style>
+</head>
+
+
+<body>
+	<div id="dqc_output">
+		<table style="width:95%;">
+		  <tr>
+		    <td style="width:20%;height:50px;"><textarea style="width:95.3%;height:50px;" v-model="table_string" placeholder="需要包含库名称:库名.表名"></textarea></td>
+		    <td style="width:75.3%;height:50px;"><textarea style="width:99%;height:50px;" v-model="colmon_string" placeholder="字段之间使用逗号分隔：col_1,col_2"></textarea></td>
+			<td><div style="position:relative;top:0px"><button v-on:click="dqc_setting">提交</button></div></td>
+		  </tr>
+		</table>
+		
+		<div v-if="setting_flag" style="margin-top: 50px;">	
+				<table cellspacing="0" width="95%" class="setting_style">
+					<caption>规则配置表</caption>
+					
+					<tr height="50px">
+						<td width="15%" style="border: solid 0.5px black;">
+							主键校验
+						</td>
+						<td width="79.5%" style="border: solid 0.5px black;">
+							<ul class="check_style">
+								<li v-for='col, index in cols' style="float: left; margin-bottom: 15px;">
+									<input type="checkbox" v-bind:id="index" v-bind:value="col" v-model="pk_chk"/>{{col}} &nbsp;
+								</li>
+							</ul>
+						</td>
+						<td width="5.5%" rowspan="4">
+							<div style="position:relative;top:0px;left: 5px;"><button v-on:click="dqc_generator">提交</button></div>
+						</td>
+					</tr>
+					
+					<tr height="50px">
+						<td width="15%" style="border: solid 0.5px black;">
+							非空校验
+						</td>
+						<td width="79.5%" style="border: solid 0.5px black;">
+							<ul class="check_style">
+								<li v-for='col, index in cols' style="float: left; margin-bottom: 15px;">
+									<input type="checkbox" v-bind:id="index" v-bind:value="col" v-model="null_chk"/>{{col}} &nbsp;
+								</li>
+							</ul>
+						</td>
+						<td width="5.5%" align="center">
+							
+						</td>
+					</tr>
+					
+					<tr height="50px">
+						<td width="15%" style="border: solid 0.5px black;">
+							日期校验
+						</td>
+						<td width="79.5%" style="border: solid 0.5px black;">
+							<ul class="check_style">
+								<li v-for='col, index in cols' style="float: left; margin-bottom: 15px;">
+									<input type="checkbox" v-bind:id="index" v-bind:value="col" v-model="date_chk"/>{{col}} &nbsp;
+								</li>
+							</ul>
+						</td>
+						<td width="5.5%" align="center">
+							
+						</td>
+					</tr>
+					
+					<tr height="50px">
+						<td width="15%" style="border: solid 0.5px black;">
+							数据量校验
+						</td>
+						<td width="79.5%" style="border: solid 0.5px black;">
+							<ul class="check_style">
+								<li v-for='col, index in cols' style="float: left; margin-bottom: 15px;">
+									<input type="checkbox" v-bind:id="index" v-bind:value="col" v-model="cnt_chk"/>{{col}} &nbsp;
+								</li>
+							</ul>
+						</td>
+						<td width="5.5%" align="center">
+							
+						</td>
+					</tr>
+					
+				</table>			
+		</div>
+		
+		<div v-if="dqc_show_flag" style="margin-top: 10px;">
+			<table cellspacing="0" width="94.5%" class="setting_style">
+				<tr>
+					<td style="width: 94%;">
+						<textarea style="width: 100%;" rows="10" id="dqc_txt">dqc代码</textarea>
+					</td>
+					<td style="width: 6%;"height="300">
+						<div style="position:relative;top:0px;left:10px" ><button v-on:click="dqc_copy">复制</button></div>
+					</td>
+				</tr>
+			</table>
+			
+		</div>
+		
+		
+	</div>
+	<script type="text/javascript">
+	     var dqc_var=new Vue({
+		    el:"#dqc_output",
+		    data:{
+				colmon_string:"",
+				table_string:"",
+				setting_flag:false,
+				dqc_show_flag:false,
+				cols:"",
+				pk_chk:[],
+				null_chk:[],
+				date_chk:[],
+				cnt_chk:[]
+		    },
+			methods:{
+				colmon_check(){
+					var illegal_tips=["","输入字段为空","输入字段包含中文逗号","字段名包含中文"];
+					this.colmon_string=this.colmon_string.replace(/\s+/g, "");
+					colmons_arr=this.colmon_string.split(",");
+					error_code=0;
+					han = /[\u4e00-\u9fa5]+$/;
+					
+					if(colmons_arr==""){
+						error_code=1;
+					}else if(this.colmon_string.search("，")>=0){
+						error_code=2;
+					}else if(han.test(this.colmon_string.replace(/\./,""))){
+						error_code=3;
+					}
+					
+					return illegal_tips[error_code];
+				},
+				
+				table_check(){
+					var illegal_tips=["","输入库表名为空","输入表名没有包含库名","表名格式错误","表名包含中文"];
+					this.table_string=this.table_string.replace(/\s+/g, "");
+					var table_arr=this.table_string.split(".");
+					error_code=0;
+					han = /[\u4e00-\u9fa5]+$/;
+					
+					if(table_arr[0]=="" || table_arr[1]==""){
+						error_code=1;
+					}else if(table_arr.length==1){
+						error_code=2;
+					}else if(table_arr.length>2){
+						error_code=3
+					}else if(han.test(this.table_string.replace(/\./,""))){
+						error_code=4;
+					}
+					
+					return illegal_tips[error_code];
+				},
+				
+				dqc_setting(){
+					this.colmon_string=this.colmon_string.replace(/\s+/g, "");
+					colmons_arr_new=this.colmon_string.split(",");
+					if(colmons_arr_new[colmons_arr_new.length-1]==""){
+						colmons_arr_new.splice(colmons_arr_new.length-1,1);
+					}
+					
+					colmon_error=this.colmon_check();
+					table_error=this.table_check();
+					if(table_error!=""){
+						alert(table_error);
+					}else if(colmon_error!=""){
+						alert(colmon_error);
+					}else{
+						this.setting_flag=true;
+						this.cols=colmons_arr_new;
+					}
+				},
+				
+				dqc_generator(){
+					console.log(this.pk_chk);
+					console.log(this.null_chk);
+					console.log(this.date_chk);
+					console.log(this.cnt_chk);
+					console.log(this.table_string);
+					this.dqc_show_flag=true;
+				},
+				dqc_copy(){
+					var dqc_txt=document.getElementById("dqc_txt");
+					dqc_txt.select();
+					document.execCommand("copy");
+					alert("复制成功");
+				}
+			}
+	    });
+	</script>
+	<style type="text/css">
+		.check_style li{list-style-type:none}
+		.check_style li{float:left;}
+		.check_style li{margin-top: 1px;}
+		.check_style{border-collapse: collapse;}
+	</style>
+
+</body>
+</html>
