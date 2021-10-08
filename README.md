@@ -5,7 +5,7 @@ Data warehouses often need to use DQC verification, but the verification rules a
 vue.js
 
 ## Usage
-vue、javascript
+vue&javascript
 
 ## Contributing
 Wei Fang(only)
